@@ -75,8 +75,6 @@ export function RankingClient({
 
   const catColor = categoryColor(ranking.category);
 
-  // Top 4 criteria by weight for the pill strip
-  const topCriteria = [...criteria].sort((a, b) => b.weight - a.weight).slice(0, 6);
 
   return (
     <div style={{
@@ -154,52 +152,7 @@ export function RankingClient({
         </div>
       </div>
 
-      {/* Criteria pills strip */}
-      <div style={{
-        background: theme.light.bg,
-        padding: '10px 14px',
-        borderBottom: `1px solid ${theme.light.border}`,
-        display: 'flex',
-        gap: 5,
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }}>
-        {topCriteria.map(c => (
-          <span key={c.id} style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 7,
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase',
-            padding: '3px 8px',
-            borderRadius: 20,
-            background: c.weight >= 12 ? theme.light.brassLight : theme.light.bgSubtle,
-            color: c.weight >= 12 ? '#7A5A1A' : theme.light.ink3,
-            border: `1px solid ${c.weight >= 12 ? '#E0D0A8' : theme.light.border}`,
-            whiteSpace: 'nowrap',
-          }}>
-            {c.label} {c.weight}%
-          </span>
-        ))}
-        <button
-          onClick={() => setShowWeightEditor(true)}
-          style={{
-            marginLeft: 'auto',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 7,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: theme.light.brass,
-            padding: '3px 9px',
-            border: `1px solid ${theme.light.border}`,
-            borderRadius: 20,
-            cursor: 'pointer',
-            background: 'transparent',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Edit ›
-        </button>
-      </div>
+
 
 
 
