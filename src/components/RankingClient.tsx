@@ -368,84 +368,74 @@ function MapView({
   criteria: OmoCriterion[];
   scores: OmoScore[];
 }) {
-  const [selected, setSelected] = useState<OmoOption | null>(null);
-
-  const withLocations = options.filter(o => o.maps_url);
   const ranked = options.filter(o => !o.is_disqualified);
   const disqualified = options.filter(o => o.is_disqualified);
 
-  // Build a Google Maps embed URL from the first option's maps_url query string
-  // e.g. https://www.google.com/maps/search/?api=1&query=Little+Italy+San+Diego+CA
-  // → extract the query and build an embed search
-  function buildEmbedUrl(mapsUrl: string): string {
-    try {
-      const url = new URL(mapsUrl);
-      const query = url.searchParams.get('query') ?? '';
-      return `https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(query)}`;
-    } catch {
-      return '';
-    }
+  // Build a Google Maps URL that shows all ranked options as a multi-search
+  // Uses dir/ with all locations as waypoints — drops pins for each in native Maps
+  const allMapsUrl = (() => {
+    const locs = ranked
+      .slice(0, 10)
+      .map(o => {
+        try {
+          return new URL(o.maps_url ?? '').searchParams.get('query') ?? o.title;
+        } catch {
+          return o.title;
+        }
+      });
+    if (locs.length === 0) return null;
+    if (locs.length === 1) return ranked[0].maps_url ?? null;
+    // Maps dir/ shows multiple pins
+    const parts = locs.map(l => encodeURIComponent(l)).join('/');
+    return `https://www.google.com/maps/dir/${parts}`;
+  })();
+
+  function optionMapsUrl(o: OmoOption): string {
+    return o.maps_url ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.title)}`;
   }
 
-  // Use a static Google Maps embed showing all options as a search
-  // Build query from all option titles combined for a multi-point view
-  const allQuery = withLocations
-    .slice(0, 3)
-    .map(o => o.title)
-    .join(' OR ');
-
-  // Fallback: show ranked list with tappable Google Maps links
   return (
     <div style={{ paddingBottom: 80 }}>
 
-      {/* Google Maps iframe — centered on the top non-disqualified option's maps_url location */}
-      {withLocations.length > 0 && (() => {
-        const topOption = withLocations.find(o => !o.is_disqualified) ?? withLocations[0];
-        // Extract query from maps_url e.g. ?api=1&query=Little+Italy+San+Diego+CA
-        let embedSrc = '';
-        try {
-          const u = new URL(topOption.maps_url ?? '');
-          const q = u.searchParams.get('query') ?? topOption.title;
-          // Use a Maps search embed centered on San Diego for neighborhood rankings
-          // For more precise results we use the query directly
-          embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed&z=14&ll=32.7241,-117.1684`;
-        } catch {
-          embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(topOption.title)}&output=embed&z=13&ll=32.7241,-117.1684`;
-        }
-        return (
-          <div style={{ position: 'relative', width: '100%', height: 300 }}>
-            <iframe
-              src={embedSrc}
-              width="100%"
-              height="300"
-              style={{ border: 'none', display: 'block' }}
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-            <div style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              background: 'rgba(22,46,56,0.88)',
-              backdropFilter: 'blur(6px)',
-              borderRadius: 8,
-              padding: '5px 10px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 8,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'rgba(200,169,126,0.8)',
-              pointerEvents: 'none',
-            }}>
-              Map · tap list below to open in maps
-            </div>
-          </div>
-        );
-      })()}
+      {/* View all on map — opens native Google Maps with all pins */}
+      {allMapsUrl && (
+        <a
+          href={allMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            margin: '0 0 0 0',
+            padding: '16px 20px',
+            background: theme.bg,
+            textDecoration: 'none',
+            borderBottom: `1px solid ${theme.light.border}`,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8A97E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5"/>
+          </svg>
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: theme.cream,
+          }}>View all {ranked.length} options on map</span>
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            color: 'rgba(200,169,126,0.5)',
+          }}>↗</span>
+        </a>
+      )}
 
-      {/* Ranked option list — tap to open in Google Maps */}
-      <div style={{ padding: '12px 14px 0' }}>
+      {/* Ranked list — each row opens that location in Google Maps */}
+      <div style={{ padding: '14px 14px 0' }}>
 
         <div style={{
           fontFamily: 'var(--font-mono)',
@@ -453,26 +443,25 @@ function MapView({
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: theme.light.ink4,
-          marginBottom: 8,
-        }}>All options — tap to open in maps</div>
+          marginBottom: 10,
+        }}>Tap any option to open in Google Maps</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-          {/* Ranked options */}
           {ranked.map((o, i) => {
             const sc = computeScore(o, criteria, scores);
             const isWinner = i === 0;
             return (
               <a
                 key={o.id}
-                href={o.maps_url ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.title)}`}
+                href={optionMapsUrl(o)}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 12,
-                  padding: '10px 12px',
+                  padding: '12px 14px',
                   background: theme.light.surface,
                   borderRadius: 10,
                   border: isWinner
@@ -482,10 +471,10 @@ function MapView({
                 }}
               >
                 <div style={{
-                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                   background: isWinner ? theme.light.brass : theme.bg,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
                   color: isWinner ? '#1C1A16' : theme.cream,
                 }}>
                   #{i + 1}
@@ -494,7 +483,7 @@ function MapView({
                   <div style={{
                     fontFamily: 'var(--font-serif)',
                     fontWeight: 300,
-                    fontSize: 15,
+                    fontSize: 16,
                     color: theme.light.ink,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -503,49 +492,63 @@ function MapView({
                   {o.subtitle && (
                     <div style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: 8,
+                      fontSize: 9,
                       color: theme.light.ink4,
-                      marginTop: 1,
+                      marginTop: 2,
                     }}>{o.subtitle}</div>
                   )}
                 </div>
-                <div style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: isWinner ? theme.light.brass : theme.light.ink3,
-                  flexShrink: 0,
-                }}>
-                  {sc.toFixed(2)}
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: isWinner ? theme.light.brass : theme.light.ink3,
+                  }}>{sc.toFixed(2)}</div>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 8,
+                    color: theme.light.ink4,
+                  }}>↗ maps</div>
                 </div>
               </a>
             );
           })}
 
-          {/* Disqualified options */}
+          {disqualified.length > 0 && (
+            <div style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 8,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: theme.light.ink4,
+              margin: '6px 0 4px',
+            }}>Disqualified</div>
+          )}
+
           {disqualified.map(o => (
             <a
               key={o.id}
-              href={o.maps_url ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.title)}`}
+              href={optionMapsUrl(o)}
               target="_blank"
               rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                padding: '10px 12px',
+                padding: '10px 14px',
                 background: theme.light.surface,
                 borderRadius: 10,
                 border: `1px solid #E8D0C8`,
                 textDecoration: 'none',
-                opacity: 0.65,
+                opacity: 0.6,
               }}
             >
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                 background: '#C77B5C',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--font-mono)', fontSize: 10,
+                fontFamily: 'var(--font-mono)', fontSize: 12,
                 color: '#fff',
               }}>⚠</div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -563,8 +566,8 @@ function MapView({
                   fontFamily: 'var(--font-mono)',
                   fontSize: 8,
                   color: '#C77B5C',
-                  marginTop: 1,
-                }}>Disqualified</div>
+                  marginTop: 2,
+                }}>Disqualified · tap to view location</div>
               </div>
             </a>
           ))}
