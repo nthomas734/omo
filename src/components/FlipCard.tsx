@@ -143,11 +143,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               }}>
                 {isDisq ? score.toFixed(1) : score.toFixed(2)}
               </div>
-              <div style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 8,
-                color: theme.light.ink4,
-              }}>/10</div>
+
             </div>
           </div>
 

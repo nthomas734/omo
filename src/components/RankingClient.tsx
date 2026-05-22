@@ -359,6 +359,14 @@ export function RankingClient({
 
 // ── MAP VIEW ─────────────────────────────────────────────
 
+function PinIcon({ color, size = 16 }: { color: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+  );
+}
+
 function MapView({
   options,
   criteria,
@@ -371,162 +379,66 @@ function MapView({
   const ranked = options.filter(o => !o.is_disqualified);
   const disqualified = options.filter(o => o.is_disqualified);
 
-  // Build a Google Maps URL that shows all ranked options as a multi-search
-  // Uses dir/ with all locations as waypoints — drops pins for each in native Maps
-  const allMapsUrl = (() => {
-    const locs = ranked
-      .slice(0, 10)
-      .map(o => {
-        try {
-          return new URL(o.maps_url ?? '').searchParams.get('query') ?? o.title;
-        } catch {
-          return o.title;
-        }
-      });
-    if (locs.length === 0) return null;
-    if (locs.length === 1) return ranked[0].maps_url ?? null;
-    // Maps dir/ shows multiple pins
-    const parts = locs.map(l => encodeURIComponent(l)).join('/');
-    return `https://www.google.com/maps/dir/${parts}`;
-  })();
-
   function optionMapsUrl(o: OmoOption): string {
     return o.maps_url ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.title)}`;
   }
 
+  const stripStyle = (isWinner: boolean): React.CSSProperties => ({
+    width: 48,
+    flexShrink: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 0',
+    gap: 5,
+    borderRight: `1px solid ${theme.light.bgSubtle}`,
+    background: isWinner ? '#FDF8F0' : theme.light.surface,
+  });
+
+  // Center map on first ranked option's location
+  const centerQuery = (() => {
+    const top = ranked[0];
+    if (!top) return 'San+Diego,CA';
+    try {
+      return new URL(top.maps_url ?? '').searchParams.get('query') ?? 'San+Diego,CA';
+    } catch { return 'San+Diego,CA'; }
+  })();
+
+  const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(centerQuery)}&output=embed&z=13`;
+
   return (
     <div style={{ paddingBottom: 80 }}>
 
-      {/* View all on map — opens native Google Maps with all pins */}
-      {allMapsUrl && (
-        <a
-          href={allMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10,
-            margin: '0 0 0 0',
-            padding: '16px 20px',
-            background: theme.bg,
-            textDecoration: 'none',
-            borderBottom: `1px solid ${theme.light.border}`,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8A97E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-            <circle cx="12" cy="9" r="2.5"/>
-          </svg>
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: theme.cream,
-          }}>View all {ranked.length} options on map</span>
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            color: 'rgba(200,169,126,0.5)',
-          }}>↗</span>
-        </a>
-      )}
+      {/* Google Maps iframe — centered on top ranked option */}
+      <div style={{ position: 'relative', width: '100%', height: 240 }}>
+        <iframe
+          src={embedSrc}
+          width="100%"
+          height="240"
+          style={{ border: 'none', display: 'block' }}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      </div>
 
-      {/* Ranked list — each row opens that location in Google Maps */}
       <div style={{ padding: '14px 14px 0' }}>
+      <div style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 8,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        color: theme.light.ink4,
+        marginBottom: 10,
+      }}>Tap any option to open in Google Maps</div>
 
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 8,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: theme.light.ink4,
-          marginBottom: 10,
-        }}>Tap any option to open in Google Maps</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-
-          {ranked.map((o, i) => {
-            const sc = computeScore(o, criteria, scores);
-            const isWinner = i === 0;
-            return (
-              <a
-                key={o.id}
-                href={optionMapsUrl(o)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 14px',
-                  background: theme.light.surface,
-                  borderRadius: 10,
-                  border: isWinner
-                    ? `1.5px solid ${theme.light.brass}`
-                    : `1px solid ${theme.light.border}`,
-                  textDecoration: 'none',
-                }}
-              >
-                <div style={{
-                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                  background: isWinner ? theme.light.brass : theme.bg,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-                  color: isWinner ? '#1C1A16' : theme.cream,
-                }}>
-                  #{i + 1}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontWeight: 300,
-                    fontSize: 16,
-                    color: theme.light.ink,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>{o.title}</div>
-                  {o.subtitle && (
-                    <div style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 9,
-                      color: theme.light.ink4,
-                      marginTop: 2,
-                    }}>{o.subtitle}</div>
-                  )}
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: isWinner ? theme.light.brass : theme.light.ink3,
-                  }}>{sc.toFixed(2)}</div>
-                  <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 8,
-                    color: theme.light.ink4,
-                  }}>↗ maps</div>
-                </div>
-              </a>
-            );
-          })}
-
-          {disqualified.length > 0 && (
-            <div style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 8,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: theme.light.ink4,
-              margin: '6px 0 4px',
-            }}>Disqualified</div>
-          )}
-
-          {disqualified.map(o => (
+        {ranked.map((o, i) => {
+          const sc = computeScore(o, criteria, scores);
+          const isWinner = i === 0;
+          return (
             <a
               key={o.id}
               href={optionMapsUrl(o)}
@@ -534,45 +446,147 @@ function MapView({
               rel="noopener noreferrer"
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '10px 14px',
+                alignItems: 'stretch',
                 background: theme.light.surface,
-                borderRadius: 10,
-                border: `1px solid #E8D0C8`,
+                borderRadius: 12,
+                border: isWinner
+                  ? `1.5px solid ${theme.light.brass}`
+                  : `1px solid ${theme.light.border}`,
                 textDecoration: 'none',
-                opacity: 0.6,
+                overflow: 'hidden',
               }}
             >
-              <div style={{
-                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                background: '#C77B5C',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--font-mono)', fontSize: 12,
-                color: '#fff',
-              }}>⚠</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Pin + rank strip */}
+              <div style={stripStyle(isWinner)}>
+                <PinIcon color={isWinner ? theme.light.brass : theme.light.ink4} size={18} />
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isWinner ? theme.light.brass : theme.light.ink3,
+                }}>#{i + 1}</div>
+              </div>
+
+              {/* Name + subtitle + coords */}
+              <div style={{ flex: 1, padding: '11px 12px', minWidth: 0 }}>
                 <div style={{
                   fontFamily: 'var(--font-serif)',
                   fontWeight: 300,
-                  fontSize: 15,
-                  color: theme.light.ink3,
-                  textDecoration: 'line-through',
+                  fontSize: 16,
+                  color: theme.light.ink,
+                  lineHeight: 1.2,
+                  marginBottom: 2,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>{o.title}</div>
+                {o.subtitle && (
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 8,
+                    color: theme.light.ink4,
+                    marginBottom: 5,
+                    letterSpacing: '0.04em',
+                  }}>{o.subtitle}</div>
+                )}
+              </div>
+
+              {/* Score + maps link */}
+              <div style={{
+                flexShrink: 0,
+                padding: '11px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+              }}>
                 <div style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: 8,
-                  color: '#C77B5C',
-                  marginTop: 2,
-                }}>Disqualified · tap to view location</div>
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: isWinner ? theme.light.brass : theme.light.ink3,
+                  lineHeight: 1,
+                }}>{sc.toFixed(2)}</div>
+                <div style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  color: isWinner ? theme.light.brass : theme.light.ink4,
+                  letterSpacing: '0.06em',
+                }}>↗ maps</div>
               </div>
             </a>
-          ))}
+          );
+        })}
 
-        </div>
+        {disqualified.length > 0 && (
+          <div style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 8,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: theme.light.ink4,
+            margin: '6px 0 2px',
+          }}>Disqualified</div>
+        )}
+
+        {disqualified.map(o => (
+          <a
+            key={o.id}
+            href={optionMapsUrl(o)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'stretch',
+              background: theme.light.surface,
+              borderRadius: 12,
+              border: '1px solid #E8D0C8',
+              textDecoration: 'none',
+              overflow: 'hidden',
+              opacity: 0.6,
+            }}
+          >
+            <div style={{
+              width: 48, flexShrink: 0,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              padding: '12px 0', gap: 5,
+              borderRight: '1px solid #EDE8DF',
+            }}>
+              <PinIcon color="#C77B5C" size={18} />
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                color: '#C77B5C',
+              }}>⚠</div>
+            </div>
+            <div style={{ flex: 1, padding: '11px 12px', minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 300,
+                fontSize: 16,
+                color: theme.light.ink3,
+                textDecoration: 'line-through',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}>{o.title}</div>
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 8,
+                color: '#C77B5C',
+                marginTop: 3,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}>Disqualified · tap to view</div>
+            </div>
+            <div style={{ padding: '11px 12px', flexShrink: 0, display: 'flex', alignItems: 'flex-end' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#C77B5C' }}>↗ maps</div>
+            </div>
+          </a>
+        ))}
+
+      </div>
       </div>
     </div>
   );
