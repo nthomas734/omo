@@ -1,33 +1,15 @@
-import { notFound } from 'next/navigation';
-import { getRankingBySlug, getReviewers, getReviewsForRanking } from '@/lib/supabase';
-import { RankingClient } from '@/components/RankingClient';
+export const dynamic = 'force-dynamic';
 
-export const revalidate = 0;
+import { HomeClient } from '@/components/HomeClient';
+import { OmoRanking } from '@/lib/supabase';
 
-interface PageProps {
-  params: Promise<{ slug: string }>;
-}
-
-export default async function RankingPage({ params }: PageProps) {
-  const { slug } = await params;
-  const data = await getRankingBySlug(slug);
-
-  if (!data || !data.ranking.is_published) {
-    notFound();
+export default async function HomePage() {
+  let rankings: OmoRanking[] = [];
+  try {
+    const { getRankings } = await import('@/lib/supabase');
+    rankings = await getRankings();
+  } catch (e) {
+    console.error('Failed to load rankings:', e);
   }
-
-  const [reviewers, reviewData] = await Promise.all([
-    getReviewers(),
-    getReviewsForRanking(data.ranking.id),
-  ]);
-
-  return (
-    <RankingClient
-      {...data}
-      reviewers={reviewers}
-      reviews={reviewData.reviews}
-      reviewRatings={reviewData.ratings}
-      reviewPhotos={reviewData.photos}
-    />
-  );
+  return <HomeClient rankings={rankings} />;
 }
