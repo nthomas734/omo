@@ -140,7 +140,7 @@ export function ReviewWizard({
           {/* ── WHO ── */}
           {step === 'who' && (
             <>
-              <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 22, color: theme.light.ink, marginBottom: 18 }}>Who just walked out?</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 22, color: theme.light.ink, marginBottom: 18 }}>Who's reviewing?</div>
               {reviewers.map(r => (
                 <button key={r.id} onClick={() => selectReviewer(r.id)} style={{
                   display: 'flex', alignItems: 'center', gap: 12, width: '100%',
@@ -167,7 +167,7 @@ export function ReviewWizard({
           {/* ── VIBE ── */}
           {step === 'vibe' && (
             <>
-              <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 22, color: theme.light.ink, marginBottom: 18 }}>Walking out, your gut says—</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 22, color: theme.light.ink, marginBottom: 18 }}>Your gut says—</div>
               {VIBE_OPTIONS.map(v => (
                 <button key={v.key} onClick={() => { setVibe(v.key); setStep('ratings'); }} style={{
                   display: 'block', width: '100%', padding: '14px 16px', marginBottom: 10,
