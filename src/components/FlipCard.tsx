@@ -31,15 +31,14 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
     : `1px solid ${theme.light.border}`;
 
   const cardHeight = expanded
-    ? 250 + restCriteria.length * 22
-    : 250;
+    ? 230 + restCriteria.length * 22
+    : 230;
 
   return (
     <div style={{
       width: '100%',
       height: cardHeight,
       perspective: 900,
-      cursor: 'pointer',
       marginBottom: 10,
       transition: 'height 0.25s ease',
     }}>
@@ -53,19 +52,23 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
       }}>
 
         {/* ── FRONT ── */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: 12,
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          overflow: 'hidden',
-          background: theme.light.surface,
-          border: frontBorder,
-          opacity: isDisq ? 0.72 : 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
+        <div
+          onClick={() => setFlipped(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 12,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            overflow: 'hidden',
+            background: theme.light.surface,
+            border: frontBorder,
+            opacity: isDisq ? 0.72 : 1,
+            display: 'flex',
+            flexDirection: 'column',
+            cursor: 'pointer',
+          }}
+        >
           {/* Header */}
           <div style={{
             padding: '10px 14px 8px',
@@ -148,7 +151,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
             </div>
           </div>
 
-          {/* Bars */}
+          {/* Bars — clicking here flips (inherited from parent) */}
           <div style={{ padding: '8px 14px 4px', flex: 1 }}>
             {topCriteria.map(criterion => {
               const s = scores.find(
@@ -168,7 +171,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
             })}
           </div>
 
-          {/* Expand button — full width, easy to tap */}
+          {/* Expand button — stops propagation so it doesn't flip */}
           {hasMore && (
             <button
               onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
@@ -179,9 +182,9 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
                 fontSize: 9,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: 'rgba(184,148,78,0.75)',
+                color: 'rgba(184,148,78,0.7)',
                 background: 'rgba(184,148,78,0.06)',
-                borderTop: '1px solid rgba(184,148,78,0.15)',
+                borderTop: '1px solid rgba(184,148,78,0.12)',
                 borderBottom: 'none',
                 borderLeft: 'none',
                 borderRight: 'none',
@@ -192,24 +195,6 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               {expanded ? '↑ show less' : `↓ show ${restCriteria.length} more criteria`}
             </button>
           )}
-
-          {/* Flip hint */}
-          <div
-            onClick={() => setFlipped(true)}
-            style={{
-              textAlign: 'center',
-              padding: '7px 14px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 7,
-              letterSpacing: '0.1em',
-              color: 'rgba(184,148,78,0.45)',
-              textTransform: 'uppercase',
-              flexShrink: 0,
-              cursor: 'pointer',
-            }}
-          >
-            tap to read ›
-          </div>
         </div>
 
         {/* ── BACK ── */}
@@ -227,7 +212,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
             border: isDisq
               ? '1px solid rgba(199,123,92,0.2)'
               : `1px solid ${theme.brassLower}`,
-            padding: '16px 18px',
+            padding: '14px 16px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -240,7 +225,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               fontWeight: 300,
               fontSize: 16,
               color: isDisq ? '#F5C4B3' : theme.cream,
-              marginBottom: 10,
+              marginBottom: 8,
             }}>
               {option.title}
             </div>
@@ -250,8 +235,8 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               fontWeight: 300,
               lineHeight: 1.6,
               color: isDisq
-                ? 'rgba(245,196,179,0.8)'
-                : 'rgba(245,237,224,0.82)',
+                ? 'rgba(245,196,179,0.85)'
+                : 'rgba(245,237,224,0.85)',
             }}>
               {isDisq
                 ? option.disqualify_reason ?? 'Disqualified — see notes.'
@@ -261,21 +246,21 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
 
           <div>
             {option.vibes && option.vibes.length > 0 && (
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 12, marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 10, marginBottom: 6 }}>
                 {option.vibes.map((tag, i) => (
                   <span key={i} style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 8,
-                    letterSpacing: '0.07em',
+                    fontSize: 7,
+                    letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    padding: '3px 8px',
-                    borderRadius: 20,
-                    border: isDisq
-                      ? '1px solid rgba(199,123,92,0.25)'
-                      : `1px solid ${theme.brassLower}`,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    background: isDisq
+                      ? 'rgba(199,123,92,0.2)'
+                      : 'rgba(200,169,126,0.18)',
                     color: isDisq
-                      ? 'rgba(199,123,92,0.65)'
-                      : theme.brassLow,
+                      ? 'rgba(245,196,179,0.9)'
+                      : 'rgba(245,237,224,0.85)',
                   }}>
                     {tag}
                   </span>
@@ -286,7 +271,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               fontFamily: 'var(--font-mono)',
               fontSize: 7,
               letterSpacing: '0.1em',
-              color: isDisq ? 'rgba(199,123,92,0.3)' : 'rgba(200,169,126,0.3)',
+              color: isDisq ? 'rgba(199,123,92,0.4)' : 'rgba(200,169,126,0.4)',
               textTransform: 'uppercase',
               textAlign: 'right',
             }}>

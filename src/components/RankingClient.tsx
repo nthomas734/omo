@@ -398,41 +398,51 @@ function MapView({
   return (
     <div style={{ paddingBottom: 80 }}>
 
-      {/* Real Google Maps iframe — searches for the top option location */}
-      {withLocations.length > 0 && (
-        <div style={{ position: 'relative', width: '100%', height: 300 }}>
-          <iframe
-            src={`https://maps.google.com/maps?q=${encodeURIComponent(
-              withLocations
-                .filter(o => !o.is_disqualified)[0]?.title ?? withLocations[0]?.title ?? ''
-            )}&output=embed&z=14`}
-            width="100%"
-            height="300"
-            style={{ border: 'none', display: 'block' }}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          {/* Overlay label */}
-          <div style={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            background: 'rgba(22,46,56,0.88)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: 8,
-            padding: '5px 10px',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 8,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'rgba(200,169,126,0.8)',
-            pointerEvents: 'none',
-          }}>
-            Map view · tap pins to open
+      {/* Google Maps iframe — centered on the top non-disqualified option's maps_url location */}
+      {withLocations.length > 0 && (() => {
+        const topOption = withLocations.find(o => !o.is_disqualified) ?? withLocations[0];
+        // Extract query from maps_url e.g. ?api=1&query=Little+Italy+San+Diego+CA
+        let embedSrc = '';
+        try {
+          const u = new URL(topOption.maps_url ?? '');
+          const q = u.searchParams.get('query') ?? topOption.title;
+          // Use a Maps search embed centered on San Diego for neighborhood rankings
+          // For more precise results we use the query directly
+          embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed&z=14&ll=32.7241,-117.1684`;
+        } catch {
+          embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(topOption.title)}&output=embed&z=13&ll=32.7241,-117.1684`;
+        }
+        return (
+          <div style={{ position: 'relative', width: '100%', height: 300 }}>
+            <iframe
+              src={embedSrc}
+              width="100%"
+              height="300"
+              style={{ border: 'none', display: 'block' }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              background: 'rgba(22,46,56,0.88)',
+              backdropFilter: 'blur(6px)',
+              borderRadius: 8,
+              padding: '5px 10px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 8,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(200,169,126,0.8)',
+              pointerEvents: 'none',
+            }}>
+              Map · tap list below to open in maps
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Ranked option list — tap to open in Google Maps */}
       <div style={{ padding: '12px 14px 0' }}>
