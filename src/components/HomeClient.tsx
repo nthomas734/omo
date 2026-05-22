@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { OmoRanking, categoryColor } from '@/lib/supabase';
+import { OmoRanking } from '@/lib/supabase';
+import { categoryColor } from '@/lib/theme';
 import { Logo } from './Logo';
 import { theme } from '@/lib/theme';
 

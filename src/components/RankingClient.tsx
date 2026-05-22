@@ -4,8 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   OmoRanking, OmoCriterion, OmoOption, OmoScore, OmoVersion,
-  computeScore, categoryColor,
+  computeScore,
 } from '@/lib/supabase';
+import { categoryColor } from '@/lib/theme';
 import { FlipCard } from './FlipCard';
 import { WeightEditor } from './WeightEditor';
 import { theme } from '@/lib/theme';
