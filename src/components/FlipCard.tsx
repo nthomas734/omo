@@ -30,22 +30,19 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
     ? '1px solid #C77B5C'
     : `1px solid ${theme.light.border}`;
 
-  // Card height grows when expanded
   const cardHeight = expanded
-    ? 188 + restCriteria.length * 20
-    : 188;
+    ? 250 + restCriteria.length * 22
+    : 250;
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: cardHeight,
-        perspective: 900,
-        cursor: 'pointer',
-        marginBottom: 10,
-        transition: 'height 0.25s ease',
-      }}
-    >
+    <div style={{
+      width: '100%',
+      height: cardHeight,
+      perspective: 900,
+      cursor: 'pointer',
+      marginBottom: 10,
+      transition: 'height 0.25s ease',
+    }}>
       <div style={{
         position: 'relative',
         width: '100%',
@@ -152,10 +149,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
           </div>
 
           {/* Bars */}
-          <div
-            onClick={() => setFlipped(f => !f)}
-            style={{ padding: '8px 14px 0', flex: 1 }}
-          >
+          <div style={{ padding: '8px 14px 4px', flex: 1 }}>
             {topCriteria.map(criterion => {
               const s = scores.find(
                 sc => sc.option_id === option.id && sc.criterion_id === criterion.id
@@ -164,8 +158,6 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
                 <ScoreBar key={criterion.id} label={criterion.label} value={s?.value ?? 0} />
               );
             })}
-
-            {/* Expanded criteria */}
             {expanded && restCriteria.map(criterion => {
               const s = scores.find(
                 sc => sc.option_id === option.id && sc.criterion_id === criterion.id
@@ -176,68 +168,71 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
             })}
           </div>
 
-          {/* Footer — expand toggle + flip hint */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '4px 14px 6px',
-            flexShrink: 0,
-          }}>
-            {hasMore ? (
-              <button
-                onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 7,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: `rgba(184,148,78,0.55)`,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
-                {expanded ? `↑ less` : `↓ +${restCriteria.length} more`}
-              </button>
-            ) : <div />}
-            <div
-              onClick={() => setFlipped(f => !f)}
+          {/* Expand button — full width, easy to tap */}
+          {hasMore && (
+            <button
+              onClick={e => { e.stopPropagation(); setExpanded(x => !x); }}
               style={{
+                width: '100%',
+                padding: '8px 14px',
                 fontFamily: 'var(--font-mono)',
-                fontSize: 7,
+                fontSize: 9,
                 letterSpacing: '0.1em',
-                color: `rgba(184,148,78,0.45)`,
                 textTransform: 'uppercase',
+                color: 'rgba(184,148,78,0.75)',
+                background: 'rgba(184,148,78,0.06)',
+                borderTop: '1px solid rgba(184,148,78,0.15)',
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
                 cursor: 'pointer',
+                flexShrink: 0,
               }}
             >
-              tap to read ›
-            </div>
+              {expanded ? '↑ show less' : `↓ show ${restCriteria.length} more criteria`}
+            </button>
+          )}
+
+          {/* Flip hint */}
+          <div
+            onClick={() => setFlipped(true)}
+            style={{
+              textAlign: 'center',
+              padding: '7px 14px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 7,
+              letterSpacing: '0.1em',
+              color: 'rgba(184,148,78,0.45)',
+              textTransform: 'uppercase',
+              flexShrink: 0,
+              cursor: 'pointer',
+            }}
+          >
+            tap to read ›
           </div>
         </div>
 
         {/* ── BACK ── */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: 12,
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          overflow: 'hidden',
-          transform: 'rotateY(180deg)',
-          background: isDisq ? '#2A1010' : theme.bg,
-          border: isDisq
-            ? '1px solid rgba(199,123,92,0.2)'
-            : `1px solid ${theme.brassLower}`,
-          padding: '14px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          cursor: 'pointer',
-        }}
+        <div
           onClick={() => setFlipped(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 12,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            overflow: 'hidden',
+            transform: 'rotateY(180deg)',
+            background: isDisq ? '#2A1010' : theme.bg,
+            border: isDisq
+              ? '1px solid rgba(199,123,92,0.2)'
+              : `1px solid ${theme.brassLower}`,
+            padding: '16px 18px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+          }}
         >
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <div style={{
@@ -245,7 +240,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               fontWeight: 300,
               fontSize: 16,
               color: isDisq ? '#F5C4B3' : theme.cream,
-              marginBottom: 8,
+              marginBottom: 10,
             }}>
               {option.title}
             </div>
@@ -266,7 +261,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
 
           <div>
             {option.vibes && option.vibes.length > 0 && (
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 12, marginBottom: 8 }}>
                 {option.vibes.map((tag, i) => (
                   <span key={i} style={{
                     fontFamily: 'var(--font-mono)',
@@ -291,9 +286,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
               fontFamily: 'var(--font-mono)',
               fontSize: 7,
               letterSpacing: '0.1em',
-              color: isDisq
-                ? 'rgba(199,123,92,0.3)'
-                : 'rgba(200,169,126,0.3)',
+              color: isDisq ? 'rgba(199,123,92,0.3)' : 'rgba(200,169,126,0.3)',
               textTransform: 'uppercase',
               textAlign: 'right',
             }}>
