@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   OmoRanking, OmoCriterion, OmoOption, OmoScore, OmoVersion,
-  computeScore,
+  OmoReviewer, OmoReview, OmoReviewRating, OmoReviewPhoto,
+  computeScore, getReviewsForRanking,
 } from '@/lib/supabase';
 import { categoryColor } from '@/lib/theme';
 import { FlipCard } from './FlipCard';
 import { WeightEditor } from './WeightEditor';
+import { ReviewsTab } from './ReviewsTab';
 import { theme } from '@/lib/theme';
+import { getReviewerId } from '@/lib/identity';
 
-type Tab = 'cards' | 'map' | 'weights';
+type Tab = 'cards' | 'map' | 'reviews' | 'weights';
 
 interface RankingClientProps {
   ranking: OmoRanking;
@@ -19,6 +22,10 @@ interface RankingClientProps {
   options: OmoOption[];
   scores: OmoScore[];
   versions: OmoVersion[];
+  reviewers: OmoReviewer[];
+  reviews: OmoReview[];
+  reviewRatings: OmoReviewRating[];
+  reviewPhotos: OmoReviewPhoto[];
 }
 
 export function RankingClient({
@@ -27,12 +34,37 @@ export function RankingClient({
   options,
   scores,
   versions,
+  reviewers,
+  reviews: initialReviews,
+  reviewRatings: initialRatings,
+  reviewPhotos: initialPhotos,
 }: RankingClientProps) {
   const [tab, setTab] = useState<Tab>('cards');
   const [criteria, setCriteria] = useState(initialCriteria);
   const [showWeightEditor, setShowWeightEditor] = useState(false);
+  const [reviews, setReviews] = useState(initialReviews);
+  const [reviewRatings, setReviewRatings] = useState(initialRatings);
+  const [reviewPhotos, setReviewPhotos] = useState(initialPhotos);
+  const [currentReviewerId, setCurrentReviewerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentReviewerId(getReviewerId());
+  }, []);
+
+  const refreshReviews = useCallback(async () => {
+    try {
+      const data = await getReviewsForRanking(ranking.id);
+      setReviews(data.reviews);
+      setReviewRatings(data.ratings);
+      setReviewPhotos(data.photos);
+      setCurrentReviewerId(getReviewerId());
+    } catch (e) {
+      console.error('Failed to refresh reviews', e);
+    }
+  }, [ranking.id]);
 
   const hasLocations = options.some(o => o.maps_url);
+  const pendingReviews = reviewers.length * options.length - reviews.length;
 
   // Sort options by score, disqualified go to bottom
   const sortedOptions = [...options].sort((a, b) => {
@@ -169,39 +201,7 @@ export function RankingClient({
         </button>
       </div>
 
-      {/* View tabs */}
-      <div style={{
-        display: 'flex',
-        borderBottom: `1px solid ${theme.light.border}`,
-        background: theme.light.bg,
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}>
-        {(['cards', ...(hasLocations ? ['map'] : []), 'weights'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1,
-              padding: '10px 4px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 8,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: tab === t ? theme.light.brass : theme.light.ink4,
-              borderBottom: tab === t
-                ? `2px solid ${theme.light.brass}`
-                : '2px solid transparent',
-              background: 'transparent',
-              cursor: 'pointer',
-              transition: 'color 0.15s ease',
-            }}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+
 
       {/* ── CARDS TAB ── */}
       {tab === 'cards' && (
@@ -232,6 +232,21 @@ export function RankingClient({
             scores={scores}
           />
         </div>
+      )}
+
+      {/* ── REVIEWS TAB ── */}
+      {tab === 'reviews' && (
+        <ReviewsTab
+          options={sortedOptions}
+          criteria={criteria}
+          scores={scores}
+          reviewers={reviewers}
+          reviews={reviews}
+          ratings={reviewRatings}
+          photos={reviewPhotos}
+          currentReviewerId={currentReviewerId}
+          onReviewSubmitted={refreshReviews}
+        />
       )}
 
       {/* ── WEIGHTS TAB ── */}
@@ -353,7 +368,72 @@ export function RankingClient({
         />
       )}
 
+      {/* ── BOTTOM TAB BAR ── */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: 480,
+        background: 'rgba(10,28,36,0.95)',
+        backdropFilter: 'blur(12px)',
+        borderTop: `1px solid rgba(200,169,126,0.1)`,
+        display: 'flex',
+        padding: '10px 0 18px',
+        zIndex: 50,
+      }}>
+        <BottomTab icon="cards" label="Cards" active={tab === 'cards'} onClick={() => setTab('cards')} />
+        {hasLocations && <BottomTab icon="map" label="Map" active={tab === 'map'} onClick={() => setTab('map')} />}
+        <BottomTab icon="reviews" label="Reviews" active={tab === 'reviews'} onClick={() => setTab('reviews')} badge={pendingReviews > 0} />
+        <BottomTab icon="weights" label="Weights" active={tab === 'weights'} onClick={() => setTab('weights')} />
+      </div>
+
     </div>
+  );
+}
+
+// ── BOTTOM TAB COMPONENT ─────────────────────────────────
+
+function BottomTab({ icon, label, active, onClick, badge }: {
+  icon: string; label: string; active: boolean;
+  onClick: () => void; badge?: boolean;
+}) {
+  const iconMap: Record<string, string> = {
+    cards: 'M3 5h4v4H3V5zm0 6h4v4H3v-4zm6-6h4v4H9V5zm0 6h4v4H9v-4zm6-6h4v4h-4V5zm0 6h4v4h-4v-4z',
+    map: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    reviews: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
+    weights: 'M12 2C8.13 2 5 5.13 5 9h2c0-2.76 2.24-5 5-5s5 2.24 5 5h2c0-3.87-3.13-7-7-7zM3 9h18v2H3V9zm2 4l1.5 7h11L19 13H5z',
+  };
+
+  return (
+    <button onClick={onClick} style={{
+      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: 3, background: 'none', border: 'none', cursor: 'pointer',
+      padding: '2px 0', position: 'relative',
+    }}>
+      <svg width="20" height="20" viewBox="0 0 24 24"
+        fill={active ? '#C8A97E' : 'rgba(200,169,126,0.3)'}
+        style={{ transition: 'fill 0.15s ease' }}
+      >
+        <path d={iconMap[icon] ?? iconMap.cards} />
+      </svg>
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        color: active ? '#C8A97E' : 'rgba(200,169,126,0.3)',
+        transition: 'color 0.15s ease',
+      }}>{label}</span>
+      {active && (
+        <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#C8A97E' }} />
+      )}
+      {badge && !active && (
+        <div style={{
+          position: 'absolute', top: 0, right: '22%',
+          width: 6, height: 6, borderRadius: '50%', background: '#C77B5C',
+        }} />
+      )}
+    </button>
   );
 }
 

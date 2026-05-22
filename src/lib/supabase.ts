@@ -64,6 +64,19 @@ export interface OmoScore {
   value: number;        // 0–10
 }
 
+export type Vibe = 'loved' | 'liked' | 'meh' | 'no';
+export type Rater = 'nathan' | 'dez';
+
+export interface OmoVisitRating {
+  id: string;
+  option_id: string;
+  rater: Rater;
+  vibe: Vibe;
+  score: number | null;
+  notes: string | null;
+  visited_at: string;
+}
+
 export interface OmoVersion {
   id: string;
   ranking_id: string;
@@ -150,4 +163,152 @@ export async function getRankingBySlug(slug: string): Promise<{
     scores: scores ?? [],
     versions: versions ?? [],
   };
+}
+
+export async function getVisitRatings(rankingId: string): Promise<OmoVisitRating[]> {
+  // Get all option IDs for this ranking
+  const { data: options } = await supabase
+    .from('omo_options')
+    .select('id')
+    .eq('ranking_id', rankingId);
+
+  if (!options || options.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('omo_visit_ratings')
+    .select('*')
+    .in('option_id', options.map(o => o.id));
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function upsertVisitRating(rating: {
+  option_id: string;
+  rater: Rater;
+  vibe: Vibe;
+  score: number | null;
+  notes: string | null;
+}): Promise<void> {
+  const { error } = await supabase
+    .from('omo_visit_ratings')
+    .upsert(
+      { ...rating, visited_at: new Date().toISOString() },
+      { onConflict: 'option_id,rater' }
+    );
+  if (error) throw error;
+}
+
+// ── REVIEW TYPES ─────────────────────────────────────────
+
+export type VibeTag = 'loved' | 'liked' | 'nope';
+
+export interface OmoReviewer {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface OmoReview {
+  id: string;
+  option_id: string;
+  reviewer_id: string;
+  vibe: VibeTag;
+  note: string | null;
+  submitted_at: string;
+}
+
+export interface OmoReviewRating {
+  id: string;
+  review_id: string;
+  criterion_id: string;
+  stars: number;
+}
+
+export interface OmoReviewPhoto {
+  id: string;
+  review_id: string;
+  storage_path: string;
+  caption: string | null;
+  sort_order: number;
+}
+
+// ── REVIEW DATA FETCHING ─────────────────────────────────
+
+export async function getReviewers(): Promise<OmoReviewer[]> {
+  const { data, error } = await supabase
+    .from('omo_reviewers')
+    .select('*')
+    .order('name');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getReviewsForRanking(rankingId: string): Promise<{
+  reviews: OmoReview[];
+  ratings: OmoReviewRating[];
+  photos: OmoReviewPhoto[];
+}> {
+  const { data: options } = await supabase
+    .from('omo_options')
+    .select('id')
+    .eq('ranking_id', rankingId);
+
+  const optionIds = (options ?? []).map(o => o.id);
+  if (optionIds.length === 0) return { reviews: [], ratings: [], photos: [] };
+
+  const { data: reviews } = await supabase
+    .from('omo_reviews')
+    .select('*')
+    .in('option_id', optionIds);
+
+  const reviewIds = (reviews ?? []).map(r => r.id);
+
+  const [{ data: ratings }, { data: photos }] = await Promise.all([
+    reviewIds.length > 0
+      ? supabase.from('omo_review_ratings').select('*').in('review_id', reviewIds)
+      : Promise.resolve({ data: [] }),
+    reviewIds.length > 0
+      ? supabase.from('omo_review_photos').select('*').in('review_id', reviewIds).order('sort_order')
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  return {
+    reviews: reviews ?? [],
+    ratings: ratings ?? [],
+    photos: photos ?? [],
+  };
+}
+
+export async function submitReview(params: {
+  optionId: string;
+  reviewerId: string;
+  vibe: VibeTag;
+  note: string;
+  ratings: { criterionId: string; stars: number }[];
+}): Promise<OmoReview> {
+  const { data: review, error } = await supabase
+    .from('omo_reviews')
+    .insert({
+      option_id: params.optionId,
+      reviewer_id: params.reviewerId,
+      vibe: params.vibe,
+      note: params.note || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  if (params.ratings.length > 0) {
+    await supabase.from('omo_review_ratings').insert(
+      params.ratings.map(r => ({
+        review_id: review.id,
+        criterion_id: r.criterionId,
+        stars: r.stars,
+      }))
+    );
+  }
+
+  return review;
 }
