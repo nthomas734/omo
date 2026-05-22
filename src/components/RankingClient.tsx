@@ -489,18 +489,14 @@ function MapView({
                     letterSpacing: '0.04em',
                   }}>{o.subtitle}</div>
                 )}
-                {o.maps_url && (
+                {o.lat && o.lng && (
                   <div style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: 8,
                     color: isWinner ? theme.light.brass : 'rgba(184,148,78,0.55)',
                     letterSpacing: '0.04em',
                   }}>
-                    {(() => {
-                      try {
-                        return new URL(o.maps_url).searchParams.get('query') ?? '';
-                      } catch { return ''; }
-                    })()}
+                    {Math.abs(o.lat).toFixed(4)}° {o.lat >= 0 ? 'N' : 'S'}, {Math.abs(o.lng).toFixed(4)}° {o.lng >= 0 ? 'E' : 'W'}
                   </div>
                 )}
               </div>

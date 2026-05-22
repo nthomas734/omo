@@ -50,6 +50,8 @@ export interface OmoOption {
   pros: string[] | null;
   cons: string[] | null;
   maps_url: string | null;      // Google Maps URL if location-based
+  lat: number | null;           // latitude for coordinate display
+  lng: number | null;           // longitude for coordinate display
   is_disqualified: boolean;
   disqualify_reason: string | null;
   sort_order: number;
