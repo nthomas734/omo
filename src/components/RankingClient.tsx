@@ -467,7 +467,7 @@ function MapView({
                 }}>#{i + 1}</div>
               </div>
 
-              {/* Name + subtitle + coords */}
+              {/* Name + subtitle + location hint */}
               <div style={{ flex: 1, padding: '11px 12px', minWidth: 0 }}>
                 <div style={{
                   fontFamily: 'var(--font-serif)',
@@ -485,9 +485,23 @@ function MapView({
                     fontFamily: 'var(--font-mono)',
                     fontSize: 8,
                     color: theme.light.ink4,
-                    marginBottom: 5,
+                    marginBottom: 4,
                     letterSpacing: '0.04em',
                   }}>{o.subtitle}</div>
+                )}
+                {o.maps_url && (
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 8,
+                    color: isWinner ? theme.light.brass : 'rgba(184,148,78,0.55)',
+                    letterSpacing: '0.04em',
+                  }}>
+                    {(() => {
+                      try {
+                        return new URL(o.maps_url).searchParams.get('query') ?? '';
+                      } catch { return ''; }
+                    })()}
+                  </div>
                 )}
               </div>
 
@@ -510,7 +524,7 @@ function MapView({
                 <div style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: 9,
-                  color: isWinner ? theme.light.brass : theme.light.ink4,
+                  color: theme.light.brass,
                   letterSpacing: '0.06em',
                 }}>↗ maps</div>
               </div>
