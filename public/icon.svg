@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#162E38"/>
-  <g transform="translate(256,260)" fill="none" stroke="#C8A97E" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
-    <!-- String -->
-    <line x1="0" y1="-205" x2="0" y2="-122"/>
+  <g transform="translate(256,248)" fill="none" stroke="#C8A97E" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <!-- String shorter -->
+    <line x1="0" y1="-175" x2="0" y2="-108"/>
     <!-- Beam -->
-    <line x1="-155" y1="-122" x2="155" y2="-122"/>
+    <line x1="-148" y1="-108" x2="148" y2="-108"/>
     <!-- Pivot -->
-    <circle cx="0" cy="-122" r="26" fill="#C8A97E" stroke="none"/>
+    <circle cx="0" cy="-108" r="26" fill="#C8A97E" stroke="none"/>
     <!-- Arms -->
-    <line x1="-143" y1="-122" x2="-143" y2="-38"/>
-    <line x1="143" y1="-122" x2="143" y2="-38"/>
-    <!-- Pan curves — tighter, more refined -->
-    <path d="M-178 -38 Q-143 22 -108 -38"/>
-    <path d="M108 -38 Q143 22 178 -38"/>
-    <!-- Stand -->
-    <line x1="0" y1="108" x2="0" y2="188"/>
+    <line x1="-136" y1="-108" x2="-136" y2="-28"/>
+    <line x1="136" y1="-108" x2="136" y2="-28"/>
+    <!-- Pan curves — tighter -->
+    <path d="M-172 -28 Q-136 28 -100 -28"/>
+    <path d="M100 -28 Q136 28 172 -28"/>
+    <!-- Stand — much shorter gap -->
+    <line x1="0" y1="60" x2="0" y2="130"/>
     <!-- Base -->
-    <line x1="-72" y1="188" x2="72" y2="188"/>
+    <line x1="-68" y1="130" x2="68" y2="130"/>
   </g>
 </svg>
