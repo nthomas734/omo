@@ -338,7 +338,7 @@ export function RankingClient({
       }}>
         <BottomTab icon="cards" label="Cards" active={tab === 'cards'} onClick={() => setTab('cards')} />
         {hasLocations && <BottomTab icon="map" label="Map" active={tab === 'map'} onClick={() => setTab('map')} />}
-        <BottomTab icon="reviews" label="Reviews" active={tab === 'reviews'} onClick={() => setTab('reviews')} badge={pendingReviews > 0} />
+        <BottomTab icon="reviews" label="Reviews" active={tab === 'reviews'} onClick={() => setTab('reviews')} />
         <BottomTab icon="weights" label="Weights" active={tab === 'weights'} onClick={() => setTab('weights')} />
       </div>
 
