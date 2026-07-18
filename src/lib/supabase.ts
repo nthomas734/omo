@@ -15,7 +15,7 @@ export function supabaseAdmin() {
 
 // ── TYPES ────────────────────────────────────────────────
 
-export type Category = 'life' | 'apartments' | 'travel' | 'gear' | 'other';
+export type Category = 'life' | 'apartments' | 'travel' | 'gear' | 'coffee' | 'restaurants' | 'other';
 
 export interface OmoRanking {
   id: string;
@@ -25,6 +25,8 @@ export interface OmoRanking {
   category: Category;
   is_decided: boolean;
   decided_at: string | null;
+  chosen_option_id: string | null;  // the option we actually went with
+  outcome: string | null;           // the epilogue — how the choice aged
   is_published: boolean;
   created_at: string;
   updated_at: string;

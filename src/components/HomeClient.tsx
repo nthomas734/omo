@@ -7,14 +7,16 @@ import { categoryColor } from '@/lib/theme';
 import { Logo } from './Logo';
 import { theme } from '@/lib/theme';
 
-type Filter = 'all' | 'life' | 'apartments' | 'travel' | 'gear' | 'other';
+type Filter = 'all' | 'life' | 'apartments' | 'travel' | 'gear' | 'coffee' | 'restaurants' | 'other';
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all',        label: 'All' },
-  { key: 'life',       label: 'Life' },
-  { key: 'apartments', label: 'Apartments' },
-  { key: 'travel',     label: 'Travel' },
-  { key: 'gear',       label: 'Gear' },
+  { key: 'all',         label: 'All' },
+  { key: 'life',        label: 'Life' },
+  { key: 'apartments',  label: 'Apartments' },
+  { key: 'travel',      label: 'Travel' },
+  { key: 'gear',        label: 'Gear' },
+  { key: 'coffee',      label: 'Coffee' },
+  { key: 'restaurants', label: 'Restaurants' },
 ];
 
 interface HomeClientProps {

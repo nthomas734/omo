@@ -26,11 +26,13 @@ export const theme = {
 
   // Category dot colors (shared with ecosystem)
   cats: {
-    life:       '#8AA4C2',
-    apartments: '#D4A657',
-    travel:     '#A88BB0',
-    gear:       '#7B9F8C',
-    other:      '#888780',
+    life:        '#8AA4C2',
+    apartments:  '#D4A657',
+    travel:      '#A88BB0',
+    gear:        '#7B9F8C',
+    coffee:      '#A87B54',
+    restaurants: '#B85C5C',
+    other:       '#888780',
   },
 
   // Light dialect (ranking view)

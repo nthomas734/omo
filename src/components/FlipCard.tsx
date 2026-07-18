@@ -10,9 +10,10 @@ interface FlipCardProps {
   rank: number;
   criteria: OmoCriterion[];
   scores: OmoScore[];
+  isChosen?: boolean;
 }
 
-export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
+export function FlipCard({ option, rank, criteria, scores, isChosen = false }: FlipCardProps) {
   const [flipped, setFlipped] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const score = computeScore(option, criteria, scores);
@@ -24,7 +25,7 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
   const restCriteria = sortedCriteria.slice(5);
   const hasMore = restCriteria.length > 0;
 
-  const frontBorder = isWinner
+  const frontBorder = isWinner || isChosen
     ? `1.5px solid ${theme.light.brass}`
     : isDisq
     ? '1px solid #C77B5C'
@@ -91,7 +92,16 @@ export function FlipCard({ option, rank, criteria, scores }: FlipCardProps) {
                 marginBottom: 2,
               }}>
                 #{rank}
-                {isWinner && (
+                {isChosen ? (
+                  <span style={{
+                    background: theme.light.brassLight,
+                    color: '#7A5A1A',
+                    fontSize: 7,
+                    padding: '1px 6px',
+                    borderRadius: 20,
+                    letterSpacing: '0.08em',
+                  }}>✓ our pick</span>
+                ) : isWinner && (
                   <span style={{
                     background: theme.light.brassLight,
                     color: '#7A5A1A',

@@ -75,6 +75,11 @@ export function RankingClient({
 
   const catColor = categoryColor(ranking.category);
 
+  const chosenOption = ranking.chosen_option_id
+    ? options.find(o => o.id === ranking.chosen_option_id) ?? null
+    : null;
+  const showEpilogue = ranking.is_decided && (chosenOption !== null || !!ranking.outcome);
+
 
   return (
     <div style={{
@@ -159,6 +164,54 @@ export function RankingClient({
       {/* ── CARDS TAB ── */}
       {tab === 'cards' && (
         <div style={{ padding: '12px 14px 80px' }}>
+
+          {/* Epilogue — what we chose, and how it aged */}
+          {showEpilogue && (
+            <div style={{
+              background: theme.light.surface,
+              border: `1px solid ${theme.light.border}`,
+              borderLeft: `3px solid ${theme.light.brass}`,
+              borderRadius: 10,
+              padding: '13px 15px',
+              marginBottom: 12,
+            }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 8,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: theme.light.brass,
+                marginBottom: 7,
+              }}>
+                Epilogue
+                {ranking.decided_at && ` · decided ${new Date(ranking.decided_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+              </div>
+              {chosenOption && (
+                <div style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontWeight: 400,
+                  fontSize: 17,
+                  color: theme.light.ink,
+                  marginBottom: ranking.outcome ? 7 : 0,
+                }}>
+                  We chose {chosenOption.title}.
+                </div>
+              )}
+              {ranking.outcome && (
+                <div style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontStyle: 'italic',
+                  fontWeight: 300,
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  color: theme.light.ink3,
+                }}>
+                  {ranking.outcome}
+                </div>
+              )}
+            </div>
+          )}
+
           {sortedOptions.map((option, i) => {
             const rank = option.is_disqualified
               ? sortedOptions.filter(o => !o.is_disqualified).length + 1
@@ -170,6 +223,7 @@ export function RankingClient({
                 rank={rank}
                 criteria={criteria}
                 scores={scores}
+                isChosen={option.id === ranking.chosen_option_id}
               />
             );
           })}
