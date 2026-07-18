@@ -49,7 +49,7 @@ Server component → client component, one hop, no client fetch on load:
 - `src/app/page.tsx` and `src/app/r/[slug]/page.tsx` are `export const dynamic = 'force-dynamic'` server components that fetch everything and pass it as props to `HomeClient` / `RankingClient`.
 - They `await import('@/lib/supabase')` **dynamically** — deliberate, so Supabase client construction never runs at build time. Preserve this pattern when adding pages.
 - Fetch failures are caught and degrade to an empty list rather than throwing.
-- The only client-side fetch is `refreshReviews()` after a review is submitted; the only client-side write is `submitReview` / `upsertVisitRating`, done through the anon client under RLS.
+- The only client-side fetch is `refreshReviews()` after a review is submitted; the only client-side write is `submitReview`, done through the anon client under RLS. (`upsertVisitRating` is exported but never called — see dead code below.)
 
 `RankingClient` holds the interactive state: a `Tab` union (`cards | map | reviews | weights`, the Map tab only rendered when some option has a `maps_url`) plus a local copy of `criteria`. The weight editor mutates that local copy only — **slider changes re-rank live but are never persisted**. Editing real data is a SQL-editor operation (see below).
 
@@ -75,7 +75,13 @@ There is no in-app CRUD. **All rankings, criteria, options and scores are seeded
 - Added `chosen_option_id` (FK to `omo_options`) and `outcome` (text) to `omo_rankings` — the **epilogue**: what was chosen and how it aged. The epilogue panel renders when `is_decided && (chosen_option_id || outcome)`, and the chosen card gets a "✓ our pick" chip — which may not be the top-scoring card.
 - Widened the `category` check constraint to add `'coffee'` and `'restaurants'`, turning omo into a host for *living* rankings (places judged over time via the Reviews tab) alongside one-time decisions. These rankings may never get an epilogue and should give every option a Google Maps `maps_url`.
 
-**Schema drift to be aware of:** `src/lib/supabase.ts` reads and writes tables and columns that neither migration file creates — `omo_reviewers`, `omo_reviews`, `omo_review_ratings`, `omo_review_photos`, `omo_visit_ratings`, and `omo_options.lat` / `.lng`. They exist in the live Kura Supabase project but there is no committed DDL for them. If you need their exact shape, inspect the live database or infer from the TypeScript interfaces; if you add columns, prefer writing a new idempotent `MIGRATION_V*.sql` in the same style.
+**Schema drift — largely resolved 2026-07-18.** `src/lib/supabase.ts` reads and writes tables that neither `MIGRATION.sql` nor `MIGRATION_V2.sql` creates: `omo_reviewers`, `omo_reviews`, `omo_review_ratings`, `omo_review_photos`, plus `omo_options.lat`/`.lng` and `omo_criteria.is_visit_rated`. These were added by hand in the Supabase SQL editor. **`SCHEMA-SYNC.sql`** now captures all of it, generated from the live Kura schema — idempotent and additive, a no-op against the live DB, and required for any rebuild from empty. Read it alongside the two `MIGRATION*.sql` files to see the true schema.
+
+Caveat on that file: its constraints are declared inline in `create table if not exists`, so a table that exists but is missing a constraint won't get it retrofitted.
+
+`MIGRATION_V2.sql` had never been applied to the live database — the epilogue columns were absent and the category check still rejected `coffee` and `restaurants`. **Applied 2026-07-18** (schema portion only; the commented-out epilogue `UPDATE` at the end of that file was deliberately not run). Lesson worth keeping: a migration existing in this repo does not mean it ran — verify against live before assuming.
+
+**Dead code:** `omo_visit_ratings` does not exist in the live database and never did. `getVisitRatings()` (`src/lib/supabase.ts:180`) and `upsertVisitRating()` (`:196`) reference it but are exported and never called anywhere in `src/`. They are a superseded design — `Rater = 'nathan' | 'dez'` became the `omo_reviewers` table, and `Vibe` became `VibeTag`. The fix is deleting both functions plus the `OmoVisitRating`, `Vibe`, and `Rater` types — **not** creating the table.
 
 ### Styling conventions
 

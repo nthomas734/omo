@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { RegisterSW } from '@/components/RegisterSW';
 
 export const metadata: Metadata = {
   title: 'omo',
@@ -33,7 +34,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <RegisterSW />
+        {children}
+      </body>
     </html>
   );
 }
