@@ -49,7 +49,7 @@ Server component → client component, one hop, no client fetch on load:
 - `src/app/page.tsx` and `src/app/r/[slug]/page.tsx` are `export const dynamic = 'force-dynamic'` server components that fetch everything and pass it as props to `HomeClient` / `RankingClient`.
 - They `await import('@/lib/supabase')` **dynamically** — deliberate, so Supabase client construction never runs at build time. Preserve this pattern when adding pages.
 - Fetch failures are caught and degrade to an empty list rather than throwing.
-- The only client-side fetch is `refreshReviews()` after a review is submitted; the only client-side write is `submitReview`, done through the anon client under RLS. (`upsertVisitRating` is exported but never called — see dead code below.)
+- The only client-side fetch is `refreshReviews()` after a review is submitted; the only client-side write is `submitReview`, done through the anon client under RLS.
 
 `RankingClient` holds the interactive state: a `Tab` union (`cards | map | reviews | weights`, the Map tab only rendered when some option has a `maps_url`) plus a local copy of `criteria`. The weight editor mutates that local copy only — **slider changes re-rank live but are never persisted**. Editing real data is a SQL-editor operation (see below).
 
@@ -89,7 +89,7 @@ Caveat on that file: its constraints are declared inline in `create table if not
 
 `MIGRATION_V2.sql` had never been applied to the live database — the epilogue columns were absent and the category check still rejected `coffee` and `restaurants`. **Applied 2026-07-18** (schema portion only; the commented-out epilogue `UPDATE` at the end of that file was deliberately not run). Lesson worth keeping: a migration existing in this repo does not mean it ran — verify against live before assuming.
 
-**Dead code:** `omo_visit_ratings` does not exist in the live database and never did. `getVisitRatings()` (`src/lib/supabase.ts:180`) and `upsertVisitRating()` (`:196`) reference it but are exported and never called anywhere in `src/`. They are a superseded design — `Rater = 'nathan' | 'dez'` became the `omo_reviewers` table, and `Vibe` became `VibeTag`. The fix is deleting both functions plus the `OmoVisitRating`, `Vibe`, and `Rater` types — **not** creating the table.
+**Dead code:** removed 2026-07-19. `getVisitRatings()`, `upsertVisitRating()`, and the `OmoVisitRating`/`Vibe`/`Rater` types were deleted from `src/lib/supabase.ts` — they referenced `omo_visit_ratings`, a table that never existed in the live DB (a superseded design: `Rater` became the `omo_reviewers` table, `Vibe` became `VibeTag`). Nothing else referenced them; the table was never created, deliberately.
 
 ### Styling conventions
 
@@ -102,5 +102,5 @@ Caveat on that file: its constraints are declared inline in `create table if not
 
 - The Map tab is a Google Maps **iframe embed** (`output=embed`) centered by parsing the `query` param out of the top-ranked option's `maps_url` — not a mapping library. `lat`/`lng`, when present, are only rendered as decorative coordinate text.
 - `getRankingBySlug` runs a nested `await supabase.from('omo_options').select('id')` *inside* its `Promise.all` to fetch score rows — options are effectively queried twice.
-- One review per (option, reviewer) is the model: `pendingReviews` is computed as `reviewers.length * options.length - reviews.length`. `upsertVisitRating` upserts on `option_id,reviewer`.
+- One review per (option, reviewer) is the model: `pendingReviews` is computed as `reviewers.length * options.length - reviews.length`.
 - `omo_review_photos` is read and rendered but no upload path exists in the app; photo rows are inserted out-of-band.

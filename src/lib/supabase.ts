@@ -66,19 +66,6 @@ export interface OmoScore {
   value: number;        // 0–10
 }
 
-export type Vibe = 'loved' | 'liked' | 'meh' | 'no';
-export type Rater = 'nathan' | 'dez';
-
-export interface OmoVisitRating {
-  id: string;
-  option_id: string;
-  rater: Rater;
-  vibe: Vibe;
-  score: number | null;
-  notes: string | null;
-  visited_at: string;
-}
-
 export interface OmoVersion {
   id: string;
   ranking_id: string;
@@ -165,40 +152,6 @@ export async function getRankingBySlug(slug: string): Promise<{
     scores: scores ?? [],
     versions: versions ?? [],
   };
-}
-
-export async function getVisitRatings(rankingId: string): Promise<OmoVisitRating[]> {
-  // Get all option IDs for this ranking
-  const { data: options } = await supabase
-    .from('omo_options')
-    .select('id')
-    .eq('ranking_id', rankingId);
-
-  if (!options || options.length === 0) return [];
-
-  const { data, error } = await supabase
-    .from('omo_visit_ratings')
-    .select('*')
-    .in('option_id', options.map(o => o.id));
-
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertVisitRating(rating: {
-  option_id: string;
-  rater: Rater;
-  vibe: Vibe;
-  score: number | null;
-  notes: string | null;
-}): Promise<void> {
-  const { error } = await supabase
-    .from('omo_visit_ratings')
-    .upsert(
-      { ...rating, visited_at: new Date().toISOString() },
-      { onConflict: 'option_id,rater' }
-    );
-  if (error) throw error;
 }
 
 // ── REVIEW TYPES ─────────────────────────────────────────
