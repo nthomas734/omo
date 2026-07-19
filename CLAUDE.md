@@ -83,7 +83,9 @@ Caveat on that file: its constraints are declared inline in `create table if not
 
 - **`MIGRATION.sql` is NOT re-runnable.** Its `create policy` statements have no `drop policy if exists` guard and it carries the SD-neighborhoods seed as plain `INSERT`s. It works exactly once against an empty database. Don't paste it twice.
 - **V2's category widening relies on an implicit name.** It drops `omo_rankings_category_check`, which is the name Postgres happens to auto-assign to the inline constraint in `MIGRATION.sql`. It matches today, but nothing declares that contract.
-- **A fresh rebuild has no reviewers.** `omo_reviewers` is created empty and deliberately has no insert policy, so the Reviews tab is inert until rows are seeded by hand in the SQL editor. Inherent to the design; any rebuild runbook has to mention it.
+- **A fresh rebuild has no reviewers.** `omo_reviewers` is created empty and deliberately has no insert policy, so the Reviews tab is inert until rows are seeded by hand in the SQL editor. **Resolved 2026-07-18:** the two rows were exported from live into `SEED-REVIEWERS.sql`. Run it after `SCHEMA-SYNC.sql`. It preserves the original uuids on purpose — `omo_reviews.reviewer_id` references them, and the `omo_reviewer_id` cookie in `src/lib/identity.ts` stores one per device, so regenerating them would orphan reviews and reset both devices' identity.
+
+**Full rebuild order:** `MIGRATION.sql` → `MIGRATION_V2.sql` → `SCHEMA-SYNC.sql` → `SEED-REVIEWERS.sql`.
 
 `MIGRATION_V2.sql` had never been applied to the live database — the epilogue columns were absent and the category check still rejected `coffee` and `restaurants`. **Applied 2026-07-18** (schema portion only; the commented-out epilogue `UPDATE` at the end of that file was deliberately not run). Lesson worth keeping: a migration existing in this repo does not mean it ran — verify against live before assuming.
 
