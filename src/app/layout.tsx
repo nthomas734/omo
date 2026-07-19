@@ -5,7 +5,11 @@ import { RegisterSW } from '@/components/RegisterSW';
 export const metadata: Metadata = {
   title: 'omo',
   description: '— nothing decided lightly —',
-  manifest: '/manifest.json',
+  // ?v=2 busts iOS's cached manifest — background_color is baked into the
+  // home-screen icon at add time (it paints the strip under the bottom tab
+  // bar) and iOS reuses a stale cached manifest even on re-add. Bump the
+  // query any time manifest.json changes.
+  manifest: '/manifest.json?v=2',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

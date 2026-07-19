@@ -9,6 +9,7 @@ import {
 } from '@/lib/supabase';
 import { categoryColor } from '@/lib/theme';
 import { FlipCard } from './FlipCard';
+import { UpdateBanner } from './UpdateBanner';
 import { WeightEditor } from './WeightEditor';
 import { ReviewsTab } from './ReviewsTab';
 import { theme } from '@/lib/theme';
@@ -89,6 +90,8 @@ export function RankingClient({
       background: theme.light.bg,
       color: theme.light.ink,
     }}>
+
+      <UpdateBanner />
 
       {/* Dark header */}
       <div style={{

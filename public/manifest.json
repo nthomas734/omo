@@ -4,7 +4,7 @@
   "description": "nothing decided lightly",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#162E38",
+  "background_color": "#0A1C24",
   "theme_color": "#162E38",
   "orientation": "portrait",
   "icons": [

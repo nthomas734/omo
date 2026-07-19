@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { OmoRanking } from '@/lib/supabase';
 import { categoryColor } from '@/lib/theme';
 import { Logo } from './Logo';
+import { UpdateBanner } from './UpdateBanner';
 import { theme } from '@/lib/theme';
 
 type Filter = 'all' | 'life' | 'apartments' | 'travel' | 'gear' | 'coffee' | 'restaurants' | 'other';
@@ -40,6 +41,8 @@ export function HomeClient({ rankings }: HomeClientProps) {
       minHeight: '100vh',
       paddingBottom: 80,
     }}>
+
+      <UpdateBanner />
 
       {/* Header */}
       <div style={{ padding: '44px 20px 24px', textAlign: 'center' }}>
