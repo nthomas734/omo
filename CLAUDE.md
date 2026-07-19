@@ -79,6 +79,12 @@ There is no in-app CRUD. **All rankings, criteria, options and scores are seeded
 
 Caveat on that file: its constraints are declared inline in `create table if not exists`, so a table that exists but is missing a constraint won't get it retrofitted.
 
+**Rebuild verified 2026-07-18** against a scratch Supabase project: `MIGRATION.sql` → `MIGRATION_V2.sql` → `SCHEMA-SYNC.sql`, in that order, builds omo from empty with no errors, and the widened category check was confirmed to accept `coffee` and `restaurants`. Three things that test surfaced:
+
+- **`MIGRATION.sql` is NOT re-runnable.** Its `create policy` statements have no `drop policy if exists` guard and it carries the SD-neighborhoods seed as plain `INSERT`s. It works exactly once against an empty database. Don't paste it twice.
+- **V2's category widening relies on an implicit name.** It drops `omo_rankings_category_check`, which is the name Postgres happens to auto-assign to the inline constraint in `MIGRATION.sql`. It matches today, but nothing declares that contract.
+- **A fresh rebuild has no reviewers.** `omo_reviewers` is created empty and deliberately has no insert policy, so the Reviews tab is inert until rows are seeded by hand in the SQL editor. Inherent to the design; any rebuild runbook has to mention it.
+
 `MIGRATION_V2.sql` had never been applied to the live database — the epilogue columns were absent and the category check still rejected `coffee` and `restaurants`. **Applied 2026-07-18** (schema portion only; the commented-out epilogue `UPDATE` at the end of that file was deliberately not run). Lesson worth keeping: a migration existing in this repo does not mean it ran — verify against live before assuming.
 
 **Dead code:** `omo_visit_ratings` does not exist in the live database and never did. `getVisitRatings()` (`src/lib/supabase.ts:180`) and `upsertVisitRating()` (`:196`) reference it but are exported and never called anywhere in `src/`. They are a superseded design — `Rater = 'nathan' | 'dez'` became the `omo_reviewers` table, and `Vibe` became `VibeTag`. The fix is deleting both functions plus the `OmoVisitRating`, `Vibe`, and `Rater` types — **not** creating the table.
