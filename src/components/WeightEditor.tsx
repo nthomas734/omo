@@ -70,7 +70,7 @@ export function WeightEditor({ criteria, options, scores, onClose, onSave }: Wei
           zIndex: 101,
           maxHeight: '85vh',
           overflowY: 'auto',
-          paddingBottom: 32,
+          paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
         }}
       >
         {/* Drag handle */}

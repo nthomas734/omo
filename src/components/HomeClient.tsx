@@ -39,13 +39,13 @@ export function HomeClient({ rankings }: HomeClientProps) {
       maxWidth: 480,
       margin: '0 auto',
       minHeight: '100vh',
-      paddingBottom: 80,
+      paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
     }}>
 
       <UpdateBanner />
 
       {/* Header */}
-      <div style={{ padding: '44px 20px 24px', textAlign: 'center' }}>
+      <div style={{ padding: 'max(44px, calc(env(safe-area-inset-top) + 16px)) 20px 24px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
           <Logo size={44} />
         </div>
@@ -176,14 +176,16 @@ export function HomeClient({ rankings }: HomeClientProps) {
         transform: 'translateX(-50%)',
         width: '100%',
         maxWidth: 480,
-        height: 68,
+        minHeight: 68,
         background: 'rgba(8, 20, 26, 0.92)',
         backdropFilter: 'blur(12px)',
         borderTop: `1px solid ${theme.border}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        paddingBottom: 10,
+        // safe-area keeps the tabs above the iPhone home indicator (needs
+        // viewportFit: 'cover' in layout.tsx or the inset reads 0)
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
         zIndex: 50,
       }}>
         <TabItem icon={<GridIcon />} label="Rankings" active />

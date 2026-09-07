@@ -97,7 +97,7 @@ export function RankingClient({
       <div style={{
         background: theme.bg,
         backgroundImage: `radial-gradient(circle at 80% 20%, rgba(200,169,126,0.07), transparent 50%)`,
-        padding: '36px 20px 20px',
+        padding: 'max(36px, calc(env(safe-area-inset-top) + 12px)) 20px 20px',
       }}>
         {/* Back link */}
         <Link href="/" style={{
@@ -390,7 +390,9 @@ export function RankingClient({
         backdropFilter: 'blur(12px)',
         borderTop: `1px solid rgba(200,169,126,0.1)`,
         display: 'flex',
-        padding: '10px 0 18px',
+        // safe-area keeps the tabs above the iPhone home indicator (needs
+        // viewportFit: 'cover' in layout.tsx or the inset reads 0)
+        padding: '10px 0 max(18px, calc(8px + env(safe-area-inset-bottom)))',
         zIndex: 50,
       }}>
         <BottomTab icon="cards" label="Cards" active={tab === 'cards'} onClick={() => setTab('cards')} />
@@ -498,7 +500,7 @@ function MapView({
   const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(centerQuery)}&output=embed&z=13`;
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
 
       {/* Google Maps iframe — centered on top ranked option */}
       <div style={{ position: 'relative', width: '100%', height: 240 }}>

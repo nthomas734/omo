@@ -94,7 +94,7 @@ export function ReviewWizard({
         zIndex: 201,
         maxHeight: '92vh',
         overflowY: 'auto',
-        paddingBottom: 32,
+        paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
       }}>
         {/* Drag handle */}
         <div style={{ width: 36, height: 4, background: theme.light.borderMid, borderRadius: 2, margin: '12px auto 0' }} />
