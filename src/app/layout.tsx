@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   // home-screen icon at add time (it paints the strip under the bottom tab
   // bar) and iOS reuses a stale cached manifest even on re-add. Bump the
   // query any time manifest.json changes.
-  manifest: '/manifest.json?v=2',
+  manifest: '/manifest.json?v=3',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'omo',
   },
   icons: {
-    apple: '/apple-touch-icon.png',
+    apple: '/apple-touch-icon.png?v=3',
   },
 };
 
