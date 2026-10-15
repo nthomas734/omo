@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { RegisterSW } from '@/components/RegisterSW';
+import { ICON_180 } from './icon-data';
 
 export const metadata: Metadata = {
   title: 'omo',
@@ -9,14 +10,14 @@ export const metadata: Metadata = {
   // home-screen icon at add time (it paints the strip under the bottom tab
   // bar) and iOS reuses a stale cached manifest even on re-add. Bump the
   // query any time manifest.json changes.
-  manifest: '/manifest.json?v=3',
+  manifest: '/manifest.json?v=4',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'omo',
   },
   icons: {
-    apple: '/apple-touch-icon.png?v=3',
+    apple: [{ url: ICON_180, sizes: '180x180', type: 'image/png' }],
   },
 };
 
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Geist+Mono:wght@400;500;700&family=Manrope:wght@300;400;500;600&display=swap"
           rel="stylesheet"
         />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href={ICON_180} />
       </head>
       <body>
         <RegisterSW />
